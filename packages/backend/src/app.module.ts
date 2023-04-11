@@ -8,11 +8,11 @@ import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    UsersModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
     }),
+    UsersModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
