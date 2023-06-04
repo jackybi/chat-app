@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -12,8 +13,10 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return this.usersRepository.save(createUserDto);
+  async create(createUserDto: CreateUserDto) {
+    createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
+    this.usersRepository.save(createUserDto);
+    return { status: 'success' };
   }
 
   findAll(): Promise<User[]> {
@@ -24,8 +27,12 @@ export class UsersService {
     return this.usersRepository.findOneBy({ id });
   }
 
-  findByName(name: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ name });
+  findProfile(username: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ username });
+  }
+
+  findByName(username: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ username });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

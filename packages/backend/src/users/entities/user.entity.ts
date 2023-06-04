@@ -6,8 +6,17 @@ export class User {
   id: number;
 
   @Column({ unique: true })
-  name: string;
+  username: string;
 
   @Column()
   password: string;
+
+  @Column({ type: 'double precision', default: new Date().valueOf() })
+  createTime: number;
+
+  @Column({ default: 'user' })
+  role: string;
+
+  @Column({ default: 'on' })
+  status: string;
 }
