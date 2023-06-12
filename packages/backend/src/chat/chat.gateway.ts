@@ -15,7 +15,7 @@ import { defaultGroupId } from 'src/config/global';
 import { UseGuards } from '@nestjs/common';
 import { ChatWsGuard } from './chatws.guard';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
@@ -66,14 +66,11 @@ export class ChatGateway {
     @MessageBody() data: GroupAllMessageDto,
   ): Promise<any> {
     const user: User = client['user'];
-    console.log(user);
+    console.log(user, data);
     this.server.to(defaultGroupId).emit('groupAllMessage', {
       code: RCode.OK,
       msg: null,
-      data: {
-        ...data,
-        username: user.username,
-      },
+      data: data,
     });
   }
 }

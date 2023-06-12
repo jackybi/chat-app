@@ -18,17 +18,21 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('register')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    if (await this.usersService.findByName(createUserDto.username)) {
+      return { code: '401', msg: 'duplicate username' };
+    }
+    await this.usersService.create(createUserDto);
+    return { msg: 'success' };
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.usersService.findAll();
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
+  //   @Patch(':id')
+  //   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //     return this.usersService.update(+id, updateUserDto);
+  //   }
 }

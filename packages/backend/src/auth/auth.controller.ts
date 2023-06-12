@@ -21,13 +21,26 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
-    return this.authService.signIn(signInDto.username, signInDto.password);
+  async csignIn(@Body() signInDto: Record<string, any>) {
+    const tokenRes = await this.authService.signIn(
+      signInDto.username,
+      signInDto.password,
+    );
+    return {
+      data: {
+        token: tokenRes.access_token,
+      },
+    };
   }
 
   @UseGuards(AuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
-    return this.usersService.findByName(req.user.username);
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findByName(req.user.username);
+    return {
+      data: {
+        username: user.username,
+      },
+    };
   }
 }

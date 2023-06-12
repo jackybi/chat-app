@@ -9,17 +9,17 @@ This is a pratice chat web app built with nestjs and vue3.0.
 #License
 
 #TODO:
-- [] Init app (Framework, DB)
-- [] Server Side
-  - [] User Module (Auth)
-  - [] Websocket Module
+- [x] Init app (Framework, DB)
+- [x] Server Side
+  - [x] User Module (Auth)
+  - [x] Websocket Module
   - [] Image Uploader
-- [] Client Side
+- [x] Client Side
   - [] Header Footer
   - [] User Profile 
   - [] Chat Room
     - [] User List
-    - [] Message Area
-    - [] Input Area
+    - [x] Message Area
+    - [x] Input Area
 - [] CI
 
