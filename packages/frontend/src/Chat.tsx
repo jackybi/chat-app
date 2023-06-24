@@ -30,8 +30,11 @@ function Chat() {
   }, [authToken]);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<
-    { userId: string; content: string }[]
+    { userId: string; content: string; tContent?: string }[]
   >([]);
+  const [messageDicts, setMessageDicts] = useState<{
+    [key: string]: { userId: string; content: string; tContent?: string };
+  }>({});
 
   useEffect(() => {
     if (socket) {
@@ -58,8 +61,20 @@ function Chat() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('groupAllMessage', (data: any) => {
-      console.log(data);
-      setMessages((messages) => [...messages, data.data]);
+      if (data.data.tContent) {
+        setMessageDicts((prev) => {
+          if (prev[data.data._id])
+            prev[data.data._id].tContent = data.data.tContent;
+          return { ...prev };
+        });
+      }
+      if (data.data.content) {
+        const messageData = { ...data.data };
+        setMessages((messages) => [...messages, messageData]);
+        setMessageDicts((prev) => {
+          return { ...prev, [data.data._id]: messageData };
+        });
+      }
     });
 
     return () => {
@@ -102,7 +117,14 @@ function Chat() {
         <VStack align="flex-start" spacing={2}>
           {messages.map((msg, index) => (
             <Box key={index} borderWidth="1px" p="1rem">
-              <strong>{msg.userId}:</strong> {msg.content}
+              <p>
+                <strong>{msg.userId}:</strong> {msg.content}{' '}
+              </p>
+              {msg.tContent && (
+                <>
+                  <strong>Translation:</strong> {msg.tContent}
+                </>
+              )}
             </Box>
           ))}
         </VStack>
