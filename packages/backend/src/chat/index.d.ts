@@ -1,4 +1,4 @@
 interface GroupAllMessageDto {
-  userId: string;
+  userId: number;
   content: string;
 }

@@ -6,6 +6,7 @@ import Chat from './Chat';
 
 function App() {
   const username = useUserStore((state) => state.username);
+  console.log(username);
   return (
     <ChakraProvider>
       <Flex w="100%" h="100vh">

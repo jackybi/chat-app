@@ -6,9 +6,11 @@ import { AuthModule } from 'src/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from 'src/users/users.module';
+import { TranslateMessageModule } from 'src/translate-message/translate-message.module';
 
 @Module({
   imports: [
+    TranslateMessageModule,
     TypeOrmModule.forFeature([User]),
     AuthModule,
     UsersModule,

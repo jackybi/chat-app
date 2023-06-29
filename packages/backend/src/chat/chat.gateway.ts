@@ -16,6 +16,7 @@ import { UseGuards } from '@nestjs/common';
 import { ChatWsGuard } from './chatws.guard';
 import { v4 as uuidv4 } from 'uuid';
 import axios, { AxiosRequestConfig } from 'axios';
+import { TranslateMessageService } from 'src/translate-message/translate-message.service';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway {
@@ -26,6 +27,7 @@ export class ChatGateway {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly authService: AuthService,
+    private readonly translateService: TranslateMessageService,
   ) {}
 
   async handleConnection(client: Socket): Promise<string> {
@@ -62,16 +64,29 @@ export class ChatGateway {
   }
 
   @UseGuards(ChatWsGuard)
-  @SubscribeMessage('groupAllMessage')
+  @SubscribeMessage('groupTranslateEnMessage')
   async handleGroupAllMessage(
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: Socket & { user: User },
     @MessageBody() data: GroupAllMessageDto,
   ): Promise<any> {
-    const messageId = uuidv4();
-    this.server.to(defaultGroupId).emit('groupAllMessage', {
+    const user = client.user;
+    const messageId = await this.translateService.saveMessage({
+      userId: user.id,
+      content: data.content,
+      messageType: 'text',
+      tContent: '',
+    });
+
+    this.server.to(defaultGroupId).emit('groupTranslateMessage', {
       code: RCode.OK,
       msg: null,
-      data: { ...data, _id: messageId },
+      data: {
+        ...data,
+        userId: user.id,
+        username: user.username,
+        id: messageId,
+        createTime: new Date().getTime(),
+      },
     });
 
     const config: AxiosRequestConfig = {
@@ -104,11 +119,11 @@ export class ChatGateway {
         },
         config,
       )
-      .then((res) => {
+      .then(async (res) => {
         const stream = res.data;
         let gptContent = '';
         let finished = false;
-        stream.on('data', (bData) => {
+        stream.on('data', async (bData) => {
           gptContent += bData.toString();
           const content = gptContent.split('\n').reduce((prev, cur) => {
             if (cur.trim() === '') {
@@ -127,11 +142,16 @@ export class ChatGateway {
               return prev;
             }
           }, '');
-
-          this.server.to(defaultGroupId).emit('groupAllMessage', {
+          if (finished) {
+            console.log(content);
+            await this.translateService.updateMessage(messageId, {
+              tContent: content,
+            });
+          }
+          this.server.to(defaultGroupId).emit('groupTranslateMessage', {
             code: RCode.OK,
             msg: null,
-            data: { tContent: content, _id: messageId },
+            data: { tContent: content, id: messageId },
           });
         });
         stream.on('end', () => {

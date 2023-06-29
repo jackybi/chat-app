@@ -12,8 +12,12 @@ import {
 } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import { useUserStore } from './store/user';
+import userAxios from './axios/user';
+import { keyBy } from 'lodash-es';
+import ChatPanel, { Message } from './components/ChatPanel';
 
 function Chat() {
+  console.log('render Chat');
   const [isConnected, setIsConnected] = useState(false);
   const username = useUserStore((state) => state.username);
   const authToken = useUserStore((state) => state.authToken);
@@ -29,11 +33,9 @@ function Chat() {
     return null;
   }, [authToken]);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<
-    { userId: string; content: string; tContent?: string }[]
-  >([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageDicts, setMessageDicts] = useState<{
-    [key: string]: { userId: string; content: string; tContent?: string };
+    [key: string]: Message;
   }>({});
 
   useEffect(() => {
@@ -44,6 +46,31 @@ function Chat() {
       if (socket) socket.disconnect();
     };
   }, [socket]);
+
+  useEffect(() => {
+    userAxios
+      .get('/translate-message/latest', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      })
+      .then((res) => {
+        if (res.data.data) {
+          setMessages(
+            res.data.data.map((message: any) => ({
+              id: message.id,
+              userId: message.userId,
+              username: message.username,
+              content: message.content,
+              tContent: message.tContent,
+              createTime: message.createTime,
+            }))
+          );
+          setMessageDicts(keyBy(res.data.data, 'id'));
+        }
+      })
+      .catch((e) => console.log(e));
+  }, []);
 
   useEffect(() => {
     if (!socket) {
@@ -60,19 +87,19 @@ function Chat() {
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
-    socket.on('groupAllMessage', (data: any) => {
+    socket.on('groupTranslateMessage', (data: any) => {
       if (data.data.tContent) {
         setMessageDicts((prev) => {
-          if (prev[data.data._id])
-            prev[data.data._id].tContent = data.data.tContent;
+          if (prev[data.data.id])
+            prev[data.data.id].tContent = data.data.tContent;
           return { ...prev };
         });
       }
       if (data.data.content) {
         const messageData = { ...data.data };
-        setMessages((messages) => [...messages, messageData]);
+        setMessages((messages) => [messageData, ...messages]);
         setMessageDicts((prev) => {
-          return { ...prev, [data.data._id]: messageData };
+          return { ...prev, [data.data.id]: messageData };
         });
       }
     });
@@ -80,7 +107,7 @@ function Chat() {
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
-      socket.off('groupAllMessage');
+      socket.off('groupTranslateMessage');
     };
   }, []);
 
@@ -90,9 +117,7 @@ function Chat() {
       return;
     }
     // Send message to the server
-    socket.emit('groupAllMessage', {
-      _id: 1,
-      userId: username,
+    socket.emit('groupTranslateEnMessage', {
       content: message,
     });
 
@@ -114,20 +139,7 @@ function Chat() {
         <Button type="submit" colorScheme="blue" onClick={handleSendMessage}>
           Send
         </Button>
-        <VStack align="flex-start" spacing={2}>
-          {messages.map((msg, index) => (
-            <Box key={index} borderWidth="1px" p="1rem">
-              <p>
-                <strong>{msg.userId}:</strong> {msg.content}{' '}
-              </p>
-              {msg.tContent && (
-                <>
-                  <strong>Translation:</strong> {msg.tContent}
-                </>
-              )}
-            </Box>
-          ))}
-        </VStack>
+        <ChatPanel messages={messages} />
       </Stack>
     </Box>
   );
