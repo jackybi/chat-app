@@ -1,0 +1,36 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - release-backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Login to AWS ECR
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
+        aws-region: ap-southeast-1
+        mask-aws-account-id: 'no'
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    
+    - name: Push Docker image to Amazon ECR
+        id: push-image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            740309302092.dkr.ecr.ap-southeast-1.amazonaws.com/chat-app:prod-${{ github.sha }}
+    
+    
+      

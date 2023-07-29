@@ -3,12 +3,12 @@ import { ChakraProvider, Flex } from '@chakra-ui/react';
 import { useUserStore } from './store/user';
 import Auth from './Auth';
 import Chat from './Chat';
+import theme from './theme';
 
 function App() {
   const username = useUserStore((state) => state.username);
-  console.log(username);
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <Flex w="100%" h="100vh">
         {!username && <Auth />}
         {username && <Chat />}

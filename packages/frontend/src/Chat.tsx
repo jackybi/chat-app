@@ -1,23 +1,14 @@
 import React, { useMemo } from 'react';
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Stack,
-  Textarea,
-  VStack,
-} from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import { useUserStore } from './store/user';
 import userAxios from './axios/user';
 import { keyBy } from 'lodash-es';
 import ChatPanel, { Message } from './components/ChatPanel';
+import MessageInput from './components/MessageInput';
 
 function Chat() {
-  console.log('render Chat');
   const [isConnected, setIsConnected] = useState(false);
   const username = useUserStore((state) => state.username);
   const authToken = useUserStore((state) => state.authToken);
@@ -32,7 +23,6 @@ function Chat() {
     }
     return null;
   }, [authToken]);
-  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageDicts, setMessageDicts] = useState<{
     [key: string]: Message;
@@ -97,7 +87,7 @@ function Chat() {
       }
       if (data.data.content) {
         const messageData = { ...data.data };
-        setMessages((messages) => [messageData, ...messages]);
+        setMessages((messages) => [...messages, messageData]);
         setMessageDicts((prev) => {
           return { ...prev, [data.data.id]: messageData };
         });
@@ -111,37 +101,11 @@ function Chat() {
     };
   }, []);
 
-  const handleSendMessage = (event: any) => {
-    event.preventDefault();
-    if (!socket) {
-      return;
-    }
-    // Send message to the server
-    socket.emit('groupTranslateEnMessage', {
-      content: message,
-    });
-
-    // Clear the message input field
-    setMessage('');
-  };
-
   return (
-    <Box w="80%" mx="auto" my="5rem" borderWidth="1px" p="1rem">
-      <Stack spacing={3}>
-        <FormControl>
-          <FormLabel>Message</FormLabel>
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            isRequired
-          />
-        </FormControl>
-        <Button type="submit" colorScheme="blue" onClick={handleSendMessage}>
-          Send
-        </Button>
-        <ChatPanel messages={messages} />
-      </Stack>
-    </Box>
+    <Flex w="100%" h="100vh" flexDir="column">
+      <ChatPanel messages={messages} />
+      <MessageInput socket={socket} position={'static'} bottom={'0px'} />
+    </Flex>
   );
 }
 

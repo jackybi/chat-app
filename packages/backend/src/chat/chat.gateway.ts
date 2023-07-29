@@ -14,9 +14,8 @@ import { RCode } from 'src/config/rcode';
 import { defaultGroupId } from 'src/config/global';
 import { UseGuards } from '@nestjs/common';
 import { ChatWsGuard } from './chatws.guard';
-import { v4 as uuidv4 } from 'uuid';
-import axios, { AxiosRequestConfig } from 'axios';
 import { TranslateMessageService } from 'src/translate-message/translate-message.service';
+import { Translator } from './translator';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway {
@@ -89,81 +88,18 @@ export class ChatGateway {
       },
     });
 
-    const config: AxiosRequestConfig = {
-      responseType: 'stream',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization:
-          'Bearer sk-f2x571LvBS3kRRoN1BIcnmzaBMB4ji5Rnj1E2XAXTqsLZYTy',
-      },
-    };
-
-    await axios
-      .post(
-        'https://openai.f2api.com/v1/chat/completions',
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'I want you to act as an English translator, spelling corrector and improver. Keep the meaning same, but make them more literary.',
-            },
-            {
-              role: 'user',
-              content: data.content,
-            },
-          ],
-          temperature: 0.7,
-          stream: true,
-        },
-        config,
-      )
-      .then(async (res) => {
-        const stream = res.data;
-        let gptContent = '';
-        let finished = false;
-        stream.on('data', async (bData) => {
-          gptContent += bData.toString();
-          const content = gptContent.split('\n').reduce((prev, cur) => {
-            if (cur.trim() === '') {
-              return prev;
-            }
-            const jsonString = cur.replace(/^data: /, '');
-            try {
-              if (jsonString === '[DONE]') {
-                finished = true;
-                return prev;
-              }
-              return (
-                prev + (JSON.parse(jsonString)?.choices[0].delta.content ?? '')
-              );
-            } catch (e) {
-              return prev;
-            }
-          }, '');
-          if (finished) {
-            console.log(content);
-            await this.translateService.updateMessage(messageId, {
-              tContent: content,
-            });
-          }
-          this.server.to(defaultGroupId).emit('groupTranslateMessage', {
-            code: RCode.OK,
-            msg: null,
-            data: { tContent: content, id: messageId },
-          });
+    const translator = new Translator(data.content);
+    await translator.translate(async (isFinished, result) => {
+      if (isFinished) {
+        await this.translateService.updateMessage(messageId, {
+          tContent: result,
         });
-        stream.on('end', () => {
-          finished = true;
-        });
-      })
-      .catch(function (err) {
-        if (err.response) {
-          console.log('error:', err.response, err.response.body);
-        } else {
-          console.log('error:', err.message);
-        }
+      }
+      this.server.to(defaultGroupId).emit('groupTranslateMessage', {
+        code: RCode.OK,
+        msg: null,
+        data: { tContent: result, id: messageId },
       });
+    });
   }
 }

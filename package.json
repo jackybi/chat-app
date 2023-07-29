@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-be:dev": "pnpm --filter backend run start:dev",
+    "build-be": "pnpm --filter backend run build",
+    "start-be:prod": "pnpm --filter backend run start:prod",
+    "start-fe:dev": "pnpm --filter frontend run start",
+    "build-fe": "pnpm --filter frontend run build"
   },
   "keywords": [],
   "author": "",

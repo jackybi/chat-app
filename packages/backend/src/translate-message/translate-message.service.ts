@@ -23,7 +23,7 @@ export class TranslateMessageService {
 
   async getLatestMessages(count: number) {
     const messages = await this.messageRepository.find({
-      order: { createTime: 'DESC' },
+      order: { createTime: 'ASC' },
       take: count,
     });
     return messages.map((message) => ({
