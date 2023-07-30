@@ -9,8 +9,7 @@ import ChatPanel, { Message } from './components/ChatPanel';
 import MessageInput from './components/MessageInput';
 
 function Chat() {
-  const [isConnected, setIsConnected] = useState(false);
-  const username = useUserStore((state) => state.username);
+  const [, setIsConnected] = useState(false);
   const authToken = useUserStore((state) => state.authToken);
   const socket = useMemo(() => {
     if (authToken) {
@@ -24,7 +23,7 @@ function Chat() {
     return null;
   }, [authToken]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [messageDicts, setMessageDicts] = useState<{
+  const [, setMessageDicts] = useState<{
     [key: string]: Message;
   }>({});
 

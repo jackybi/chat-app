@@ -1,25 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import {
-  Box,
-  BoxProps,
-  Button,
-  Flex,
-  FormControl,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Kbd,
-} from '@chakra-ui/react';
-import { useUserStore } from '../store/user';
+import { Box, BoxProps, Button, Flex, Input } from '@chakra-ui/react';
 import { Socket } from 'socket.io-client';
 import { ReactComponent as Send } from '../icons/send.svg';
 const MessageInput: React.FC<{ socket: Socket | null } & BoxProps> = ({
   socket,
   ...boxProps
 }) => {
-  const authToken = useUserStore((state) => state.authToken);
   const [message, setMessage] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const handleSendMessage = useCallback((message: string) => {
     if (!socket) {
       setError('Cannot connect to the server.');

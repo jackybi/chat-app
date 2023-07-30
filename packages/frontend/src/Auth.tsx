@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  FormControl,
   FormLabel,
   Input,
   Stack,
@@ -10,10 +9,8 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  VStack,
   HStack,
   Spinner,
-  FormErrorMessage,
 } from '@chakra-ui/react';
 import { useUserStore } from './store/user';
 

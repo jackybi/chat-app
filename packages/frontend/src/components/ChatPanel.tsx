@@ -1,4 +1,4 @@
-import { VStack, Box, Text, Spacer, Flex } from '@chakra-ui/react';
+import { Box, Text, Flex } from '@chakra-ui/react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useUserStore } from '../store/user';
