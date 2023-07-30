@@ -13,7 +13,7 @@ function Chat() {
   const authToken = useUserStore((state) => state.authToken);
   const socket = useMemo(() => {
     if (authToken) {
-      return io('http://localhost:3000', {
+      return io(process.env.REACT_APP_BACKEND_URL, {
         autoConnect: false,
         query: {
           token: authToken,
